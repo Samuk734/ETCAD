@@ -1,0 +1,432 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ETCAD Vista dal vivo</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div id="app">
+  <header id="barraTitolo">
+    <div class="titoloCentro"><span class="prodotto">ETCAD Vista</span><span class="sepTitolo">—</span><span id="nomeFoglio">nessun disegno</span></div>
+    <button id="btnChatTitolo" class="btnTitolo" title="Apri o chiudi la chat con Claude">
+      <svg viewBox="0 0 16 16"><path d="M2 3h12v8H6l-3 3v-3H2z" fill="none" stroke="currentColor" stroke-width="1.3"/></svg>
+      <span>Chat</span><span id="badgeChat" class="badge" hidden>0</span></button>
+    <button id="btnImpostazioni" class="btnTitolo" title="Impostazioni della vista" aria-haspopup="true">
+      <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="2.3" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M8 1.5v2M8 12.5v2M1.5 8h2M12.5 8h2M3.4 3.4l1.4 1.4M11.2 11.2l1.4 1.4M3.4 12.6l1.4-1.4M11.2 4.8l1.4-1.4" stroke="currentColor" stroke-width="1.3"/></svg>
+      <span>Impostazioni</span></button>
+    <div class="statoConn"><span id="pallino" class="pallino"></span><span id="statoTesto">Connessione…</span></div>
+  </header>
+
+  <nav id="schedeRibbon" role="tablist">
+    <button class="attiva" role="tab" data-scheda="inizio">Inizio</button>
+    <button role="tab" data-scheda="claude">Claude</button>
+    <button role="tab" data-scheda="strumenti">Strumenti</button>
+    <button role="tab" data-scheda="vista">Vista</button>
+  </nav>
+
+  <section id="ribbon">
+    <!-- INIZIO: l'utente disegna e modifica; i bottoni si accendono anche quando lavora Claude (data-cmd) -->
+    <div class="pannello" data-scheda="inizio">
+      <div class="strumenti">
+        <button class="grande" data-comando="LINEA" data-cmd="LINE" title="Linea (L)">
+          <svg viewBox="0 0 32 32"><path d="M5 26L27 6" stroke="currentColor" stroke-width="2"/><rect x="2.5" y="23.5" width="5" height="5" fill="none" stroke="#5cb8ff"/><rect x="24.5" y="3.5" width="5" height="5" fill="none" stroke="#5cb8ff"/></svg>
+          <span>Linea</span></button>
+        <button class="grande" data-comando="POLILINEA" data-cmd="PLINE" title="Polilinea (PL)">
+          <svg viewBox="0 0 32 32"><path d="M4 24h9l4-14h11" fill="none" stroke="currentColor" stroke-width="2"/><path d="M21 10a6 6 0 016 6" fill="none" stroke="#5cb8ff" stroke-width="1.5"/></svg>
+          <span>Polilinea</span></button>
+        <div class="colonna">
+          <button data-comando="CERCHIO" data-cmd="CIRCLE" title="Cerchio: centro e raggio (C)"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.5" fill="none" stroke="currentColor" stroke-width="1.3"/><circle cx="8" cy="8" r="1" fill="#5cb8ff"/></svg><span>Cerchio</span></button>
+          <button data-comando="ARCO" data-cmd="ARC" title="Arco per 3 punti (A)"><svg viewBox="0 0 16 16"><path d="M2.5 12a6 6 0 0111 0" fill="none" stroke="currentColor" stroke-width="1.3"/><circle cx="2.5" cy="12" r="1.2" fill="#5cb8ff"/><circle cx="8" cy="6" r="1.2" fill="#5cb8ff"/><circle cx="13.5" cy="12" r="1.2" fill="#5cb8ff"/></svg><span>Arco</span></button>
+          <button data-comando="RETTANGOLO" title="Rettangolo: due angoli (REC)"><svg viewBox="0 0 16 16"><rect x="2" y="4" width="12" height="8" fill="none" stroke="currentColor" stroke-width="1.3"/><circle cx="2" cy="12" r="1.2" fill="#5cb8ff"/><circle cx="14" cy="4" r="1.2" fill="#5cb8ff"/></svg><span>Rettangolo</span></button>
+        </div>
+      </div>
+      <div class="titoloPannello">Disegno</div>
+    </div>
+    <div class="pannello" data-scheda="inizio">
+      <div class="strumenti">
+        <div class="colonna">
+          <button data-comando="SPOSTA" data-cmd="MOVE" title="Sposta (M): oggetti, punto base, punto di arrivo"><svg viewBox="0 0 16 16"><path d="M8 1v14M1 8h14M8 1l-2 2M8 1l2 2M8 15l-2-2M8 15l2-2M1 8l2-2M1 8l2 2M15 8l-2-2M15 8l-2 2" fill="none" stroke="currentColor" stroke-width="1.2"/></svg><span>Sposta</span></button>
+          <button data-comando="COPIA" data-cmd="COPY" title="Copia (CO): oggetti, punto base, punti di arrivo"><svg viewBox="0 0 16 16"><rect x="2" y="5" width="7" height="7" fill="none" stroke="currentColor"/><rect x="7" y="2" width="7" height="7" fill="none" stroke="#5cb8ff"/></svg><span>Copia</span></button>
+          <button data-comando="CANCELLA" data-cmd="ERASE" title="Cancella (E o tasto Canc)"><svg viewBox="0 0 16 16"><path d="M3 13h10M5 11l6-8 3 2-6 8H6z" fill="none" stroke="#ff6b6b" stroke-width="1.2"/></svg><span>Cancella</span></button>
+        </div>
+        <div class="colonna">
+          <button data-comando="MODTESTO" data-cmd="TEXTEDIT" title="Modifica testo (ED, o doppio clic sul testo)"><svg viewBox="0 0 16 16"><path d="M2 13h5M4.5 13V4H2h5" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="M9 12l5-5-1.5-1.5-5 5L7 13z" fill="none" stroke="#ffd166"/></svg><span>Modifica testo</span></button>
+          <button data-comando="PROPRIETA" title="Proprietà degli oggetti selezionati (PR)"><svg viewBox="0 0 16 16"><rect x="2" y="2" width="12" height="12" rx="2" fill="none" stroke="currentColor"/><path d="M5 6h6M5 9h6M5 12h3" stroke="#5cb8ff"/></svg><span>Proprietà</span></button>
+          <button data-comando="SELEZIONA" title="Seleziona tutto il foglio (Ctrl+A)"><svg viewBox="0 0 16 16"><rect x="2" y="2" width="12" height="12" fill="none" stroke="#5cb8ff" stroke-dasharray="2 1.4"/><path d="M6 5l5 3-2 .6 1.4 2.4-1 .6-1.4-2.4L6.6 11z" fill="currentColor"/></svg><span>Seleziona tutto</span></button>
+        </div>
+      </div>
+      <div class="titoloPannello">Modifica</div>
+    </div>
+    <div class="pannello" data-scheda="inizio">
+      <div class="strumenti">
+        <button class="grande" data-comando="TESTO" data-cmd="TEXT" title="Testo (T): clic sul punto e scrivi">
+          <svg viewBox="0 0 32 32"><path d="M7 8h18M16 8v18" stroke="currentColor" stroke-width="2.4"/><path d="M12 26h8" stroke="currentColor" stroke-width="1.6"/></svg>
+          <span>Testo</span></button>
+        <div class="colonna">
+          <button data-comando="QUOTA" data-cmd="DIM" title="Quota allineata (DIM): due punti e posizione"><svg viewBox="0 0 16 16"><path d="M2 4v9M14 4v9M2 10h12" fill="none" stroke="currentColor"/><path d="M2 10l2-1v2zM14 10l-2-1v2z" fill="currentColor"/></svg><span>Quota</span></button>
+          <button data-comando="ETICHETTA" title="Etichetta con freccia (ET): punta, posizione, testo"><svg viewBox="0 0 16 16"><path d="M6 6h8" stroke="currentColor"/><path d="M6 6L2.5 12.5" stroke="currentColor"/><path d="M2 13.5l.4-3 2 1.2z" fill="#5cb8ff"/><path d="M7 4.2h6" stroke="#5cb8ff" stroke-width="1.6"/></svg><span>Etichetta</span></button>
+          <label class="campoRibbon" title="Altezza dei testi nuovi (mm)"><span>h</span>
+            <select id="selAltezza"><option>1.8</option><option selected>2.5</option><option>3.5</option><option>5</option><option>7</option></select></label>
+        </div>
+      </div>
+      <div class="titoloPannello">Annotazione</div>
+    </div>
+    <div class="pannello" data-scheda="inizio">
+      <div class="strumenti">
+        <div class="colonna larga">
+          <label class="campoRibbon" title="Layer degli oggetti nuovi"><svg viewBox="0 0 16 16"><path d="M8 2l6 3-6 3-6-3z" fill="none" stroke="currentColor"/><path d="M2 8l6 3 6-3M2 11l6 3 6-3" fill="none" stroke="#5cb8ff"/></svg>
+            <select id="selLayer"></select></label>
+          <label class="campoRibbon" title="Colore degli oggetti nuovi"><span id="campColore" class="campColore"></span>
+            <select id="selColore">
+              <option value="256">DaLayer</option><option value="1">Rosso</option><option value="2">Giallo</option><option value="3">Verde</option>
+              <option value="4">Ciano</option><option value="5">Blu</option><option value="6">Magenta</option><option value="7">Bianco/nero</option>
+              <option value="8">Grigio</option><option value="30">Arancio</option></select></label>
+          <button id="btnSchizzo" class="interruttore" title="Quello che disegni diventa uno schizzo rosso per Claude, non va nel DWG"><svg viewBox="0 0 16 16"><path d="M2.5 13.5l1-3.5 7-7 2.5 2.5-7 7z" fill="none" stroke="#ff2d78" stroke-width="1.3"/><path d="M9.5 4l2.5 2.5" stroke="#ff2d78"/></svg><span>Disegna come schizzo</span></button>
+        </div>
+      </div>
+      <div class="titoloPannello">Proprietà</div>
+    </div>
+    <div class="pannello" data-scheda="inizio">
+      <div class="strumenti">
+        <button class="grande" id="btnSalva" title="Salva nel DWG le modifiche fatte qui (Ctrl+S)">
+          <svg viewBox="0 0 32 32"><path d="M6 5h16l5 5v17H6z" fill="none" stroke="currentColor" stroke-width="1.7"/><rect x="10" y="5" width="10" height="7" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="10" y="17" width="12" height="7" rx="1" fill="#5cb8ff" opacity=".85"/></svg>
+          <span>Salva DWG</span><span id="badgeBozza" class="badge badgeAngolo" hidden>0</span></button>
+        <div class="colonna">
+          <button id="btnAnnulla" title="Annulla (Ctrl+Z)"><svg viewBox="0 0 16 16"><path d="M5 4L2 7l3 3" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M2.5 7H10a4 4 0 010 8H7" fill="none" stroke="currentColor" stroke-width="1.4"/></svg><span>Annulla</span></button>
+          <button id="btnRipeti" title="Ripeti (Ctrl+Y)"><svg viewBox="0 0 16 16"><path d="M11 4l3 3-3 3" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M13.5 7H6a4 4 0 000 8h3" fill="none" stroke="currentColor" stroke-width="1.4"/></svg><span>Ripeti</span></button>
+          <button id="btnScarta" title="Scarta tutte le modifiche non salvate del foglio"><svg viewBox="0 0 16 16"><path d="M3 4h10M6 4V2.5h4V4M4.5 4l.8 10h5.4l.8-10" fill="none" stroke="#ff6b6b" stroke-width="1.2"/></svg><span>Scarta modifiche</span></button>
+        </div>
+      </div>
+      <div class="titoloPannello">Modifiche</div>
+    </div>
+
+    <!-- CLAUDE: indicare zone, schizzi, chat, riproduzione di quello che fa Claude -->
+    <div class="pannello" data-scheda="claude" hidden>
+      <div class="strumenti">
+        <button class="grande attrezzo" data-modo="area" title="Trascina un riquadro sulla zona e scrivi a Claude cosa fare (CH)">
+          <svg viewBox="0 0 32 32"><rect x="4" y="7" width="20" height="15" fill="rgba(255,176,87,.15)" stroke="#ffb057" stroke-width="1.6" stroke-dasharray="3 2"/><path d="M21 20l7 3-3 1.2 2.6 3.2-1.6 1.3-2.6-3.2-1.6 2.6z" fill="currentColor"/></svg>
+          <span>Seleziona area</span></button>
+        <div class="colonna">
+          <button class="attrezzo" data-modo="punto" title="Metti una nota su un punto (NO)"><svg viewBox="0 0 16 16"><path d="M8 15s-5-5.2-5-8.5a5 5 0 0110 0C13 9.8 8 15 8 15z" fill="none" stroke="#ffb057" stroke-width="1.3"/><circle cx="8" cy="6.5" r="1.7" fill="#ffb057"/></svg><span>Nota sul punto</span></button>
+          <button id="btnChiediSel" title="Chiedi a Claude sugli oggetti selezionati"><svg viewBox="0 0 16 16"><rect x="1.5" y="3" width="8" height="7" fill="none" stroke="#5cb8ff" stroke-dasharray="2 1"/><path d="M8 8h6.5v5H11l-2 2v-2H8z" fill="none" stroke="currentColor"/></svg><span>Chiedi sulla selezione</span></button>
+        </div>
+      </div>
+      <div class="titoloPannello">Indica a Claude</div>
+    </div>
+    <div class="pannello" data-scheda="claude" hidden>
+      <div class="strumenti">
+        <button class="grande" data-comando="MATITA" title="Matita: disegna a mano libera sul foglio, per Claude (MAT)">
+          <svg viewBox="0 0 32 32"><path d="M4 24c4-6 7 2 11-4s6-9 11-5" fill="none" stroke="#ff2d78" stroke-width="2" stroke-linecap="round"/><path d="M22 4l6 6-11 11-7 1 1-7z" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>
+          <span>Matita</span></button>
+        <div class="colonna">
+          <button data-comando="NUVOLA" title="Nuvola di revisione attorno a una zona (NUV)"><svg viewBox="0 0 16 16"><path d="M3 5a1.6 1.6 0 013-1 1.6 1.6 0 013 0 1.6 1.6 0 013 1 1.6 1.6 0 011 3 1.6 1.6 0 01-1 3 1.6 1.6 0 01-3 1 1.6 1.6 0 01-3 0 1.6 1.6 0 01-3-1 1.6 1.6 0 01-1-3 1.6 1.6 0 011-3z" fill="none" stroke="#ff2d78" stroke-width="1.1"/></svg><span>Nuvola</span></button>
+          <button id="btnInviaSchizzo" title="Manda lo schizzo a Claude con un messaggio"><svg viewBox="0 0 16 16"><path d="M2 8l12-5-4 12-2.5-5z" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="M7.5 10L14 3" stroke="#ff2d78" stroke-width="1.2"/></svg><span>Invia schizzo</span></button>
+          <button id="btnTogliSchizzo" title="Cancella lo schizzo del foglio"><svg viewBox="0 0 16 16"><path d="M3 13h10M5 11l6-8 3 2-6 8H6z" fill="none" stroke="#ff2d78" stroke-width="1.2"/></svg><span>Cancella schizzo</span></button>
+        </div>
+      </div>
+      <div class="titoloPannello">Schizzo per Claude</div>
+    </div>
+    <div class="pannello" data-scheda="claude" hidden>
+      <div class="strumenti">
+        <button class="grande" id="btnChatRibbon" title="Chat con Claude e con gli agenti">
+          <svg viewBox="0 0 32 32"><path d="M4 6h20v13H11l-5 5v-5H4z" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M27 11h1.5v12H27v4l-4-4h-8" fill="none" stroke="#5cb8ff" stroke-width="1.5"/></svg>
+          <span>Chat</span></button>
+        <button class="grande" id="btnRichieste" title="Le tue richieste e le risposte">
+          <svg viewBox="0 0 32 32"><rect x="5" y="5" width="22" height="22" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M9 11h14M9 16h14M9 21h9" stroke="#ffb057" stroke-width="1.6"/></svg>
+          <span>Richieste</span></button>
+      </div>
+      <div class="titoloPannello">Comunica</div>
+    </div>
+    <div class="pannello" data-scheda="claude" hidden>
+      <div class="strumenti">
+        <button class="grande" id="btnPausa" title="Pausa / riprendi l'animazione di Claude">
+          <svg viewBox="0 0 32 32" class="icoPausa"><rect x="9" y="7" width="5" height="18" fill="currentColor"/><rect x="18" y="7" width="5" height="18" fill="currentColor"/></svg>
+          <svg viewBox="0 0 32 32" class="icoPlay"><path d="M10 6l15 10-15 10z" fill="currentColor"/></svg>
+          <span id="lblPausa">Pausa</span></button>
+        <div class="colonna">
+          <button id="btnSalta" title="Mostra subito il risultato dei passi in corso"><svg viewBox="0 0 16 16"><path d="M2 3l6 5-6 5zM8 3l6 5-6 5z" fill="currentColor"/></svg><span>Salta passo</span></button>
+          <label class="velocita" title="Velocità di tracciamento">
+            <span>Velocità</span>
+            <input id="velocita" type="range" min="0" max="4" step="1" value="2">
+            <output id="velValore">1×</output>
+          </label>
+        </div>
+      </div>
+      <div class="titoloPannello">Riproduzione</div>
+    </div>
+    <div class="pannello" data-scheda="claude" hidden>
+      <div class="strumenti">
+        <button class="grande" id="btnDemo" title="Claude disegna da zero una pagina di schema elettrico di esempio">
+          <svg viewBox="0 0 32 32"><rect x="4" y="6" width="24" height="18" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M8 19l5-6 4 4 3-3 4 5" fill="none" stroke="#5cb8ff" stroke-width="1.6"/><circle cx="24" cy="24" r="5.5" fill="#3b8cf2"/><path d="M22.4 21.6l4 2.4-4 2.4z" fill="#fff"/></svg>
+          <span>Demo</span></button>
+      </div>
+      <div class="titoloPannello">Esempio</div>
+    </div>
+
+    <!-- STRUMENTI: misure, ricerche, controlli -->
+    <div class="pannello" data-scheda="strumenti" hidden>
+      <div class="strumenti">
+        <button class="grande attrezzo" data-modo="misura" title="Distanza fra due punti, con aggancio (DI)">
+          <svg viewBox="0 0 32 32"><path d="M4 22L22 4l6 6-18 18z" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M9 17l2 2M12 14l3 3M15 11l2 2M18 8l3 3" stroke="#5cb8ff" stroke-width="1.4"/></svg>
+          <span>Distanza</span></button>
+        <div class="colonna">
+          <button data-comando="AREA" title="Area e perimetro: clic sui vertici, Invio per finire (AREA)"><svg viewBox="0 0 16 16"><path d="M2 12l3-9 9 3-2 8z" fill="rgba(92,184,255,.18)" stroke="currentColor" stroke-width="1.2"/></svg><span>Area</span></button>
+          <button data-comando="ID" title="Coordinate di un punto (ID)"><svg viewBox="0 0 16 16"><path d="M8 2v12M2 8h12" stroke="currentColor"/><circle cx="8" cy="8" r="2.5" fill="none" stroke="#5cb8ff" stroke-width="1.3"/></svg><span>Coordinate punto</span></button>
+          <button class="attrezzo" data-modo="filo" title="Segui filo (FI): clic su un filo, si seleziona tutto il collegamento; Maiusc+clic anche le giunzioni a T"><svg viewBox="0 0 16 16"><path d="M1.5 12h4l3-8h6" fill="none" stroke="#e070ff" stroke-width="1.6"/><circle cx="1.8" cy="12" r="1.4" fill="currentColor"/><circle cx="14.2" cy="4" r="1.4" fill="currentColor"/></svg><span>Segui filo</span></button>
+        </div>
+      </div>
+      <div class="titoloPannello">Misure</div>
+    </div>
+    <div class="pannello" data-scheda="strumenti" hidden>
+      <div class="strumenti">
+        <div class="colonna">
+          <label class="campoTrova" title="Trova un testo nei fogli aperti (Ctrl+F)">
+            <svg viewBox="0 0 16 16"><circle cx="6.5" cy="6.5" r="4.5" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M10 10l4.5 4.5" stroke="currentColor" stroke-width="1.6"/></svg>
+            <input id="trovaTesto" type="search" placeholder="Trova testo…" autocomplete="off"></label>
+          <button id="btnControlla" title="Cerca testi sovrapposti o toccati da linee nel foglio"><svg viewBox="0 0 16 16"><rect x="1.5" y="4" width="8" height="5" fill="none" stroke="currentColor"/><rect x="6" y="7" width="8" height="5" fill="none" stroke="#ff6b6b"/></svg><span>Controlla sovrapposizioni</span></button>
+          <button id="btnPulisci" title="Togli dal disegno evidenze, risultati e misure"><svg viewBox="0 0 16 16"><path d="M3 13h10M5 11l6-8 3 2-6 8H6z" fill="none" stroke="currentColor" stroke-width="1.2"/></svg><span>Pulisci segni</span></button>
+        </div>
+      </div>
+      <div class="titoloPannello">Ricerca e controlli</div>
+    </div>
+    <div class="pannello" data-scheda="strumenti" hidden>
+      <div class="strumenti">
+        <button class="grande" id="btnAiuto" title="Tutti i comandi e le scorciatoie (?)">
+          <svg viewBox="0 0 32 32"><rect x="3" y="8" width="26" height="16" rx="3" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M7 13h2M11 13h2M15 13h2M19 13h2M23 13h2M9 19h14" stroke="#5cb8ff" stroke-width="1.6" stroke-linecap="round"/></svg>
+          <span>Comandi</span></button>
+      </div>
+      <div class="titoloPannello">Aiuto</div>
+    </div>
+
+    <!-- VISTA -->
+    <div class="pannello" data-scheda="vista" hidden>
+      <div class="strumenti">
+        <button class="grande" id="btnAdatta" title="Zoom estensioni (Z, o doppio clic nel vuoto)">
+          <svg viewBox="0 0 32 32"><circle cx="13" cy="13" r="8" fill="none" stroke="currentColor" stroke-width="2"/><path d="M19 19l8 8" stroke="currentColor" stroke-width="3"/><path d="M9 13h8M13 9v8" stroke="#5cb8ff" stroke-width="1.6"/></svg>
+          <span>Estensioni</span></button>
+        <div class="colonna">
+          <button class="attrezzo" data-modo="zoomf" title="Zoom finestra (ZF): trascina un riquadro"><svg viewBox="0 0 16 16"><circle cx="7" cy="7" r="4.5" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M10.3 10.3L14 14" stroke="currentColor" stroke-width="1.6"/><rect x="4.5" y="5" width="5" height="4" fill="none" stroke="#5cb8ff" stroke-dasharray="1.5 1"/></svg><span>Zoom finestra</span></button>
+          <button class="attrezzo" data-modo="pan" title="Panoramica (P). Sempre: rotella o tasto destro trascinato"><svg viewBox="0 0 16 16"><path d="M5 9V4.5a1 1 0 012 0V8M7 8V3a1 1 0 012 0v5M9 8V3.8a1 1 0 012 0V9M11 9V6a1 1 0 012 0v4c0 3-2 5-4.5 5S5 14 4 12.5L2.5 10a1 1 0 011.6-1.2L5 10" fill="none" stroke="currentColor" stroke-width="1.1"/></svg><span>Panoramica</span></button>
+          <button id="btnSegui" class="interruttore acceso" title="La vista segue le modifiche degli agenti"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="2.2" fill="#5cb8ff"/><circle cx="8" cy="8" r="5.5" fill="none" stroke="currentColor"/></svg><span>Segui Claude</span></button>
+        </div>
+        <div class="colonna">
+          <button id="btnLwt" class="interruttore acceso" title="Mostra spessori di linea (LWT)"><svg viewBox="0 0 16 16"><path d="M2 4h12" stroke="currentColor" stroke-width=".8"/><path d="M2 8h12" stroke="currentColor" stroke-width="1.8"/><path d="M2 12.5h12" stroke="currentColor" stroke-width="3"/></svg><span>Spessori</span></button>
+          <button id="btnGriglia" class="interruttore" title="Griglia (F7)"><svg viewBox="0 0 16 16"><path d="M2 5h12M2 8h12M2 11h12M5 2v12M8 2v12M11 2v12" stroke="currentColor" stroke-width=".8"/></svg><span>Griglia</span></button>
+          <button id="btnTema" title="Tema scuro / chiaro (interfaccia e disegno)"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.5" fill="none" stroke="currentColor"/><path d="M8 2.5a5.5 5.5 0 010 11z" fill="currentColor"/></svg><span>Tema</span></button>
+        </div>
+      </div>
+      <div class="titoloPannello">Navigazione</div>
+    </div>
+    <div class="pannello" data-scheda="vista" hidden>
+      <div class="strumenti">
+        <div class="colonna">
+          <button class="sceltaLayout" data-layout="singola" title="Un foglio alla volta: si vede l'agente scelto"><svg viewBox="0 0 16 16"><rect x="2" y="3" width="12" height="10" fill="none" stroke="currentColor"/></svg><span>Un foglio alla volta</span></button>
+          <button class="sceltaLayout" data-layout="agenti" title="Un riquadro per ogni agente al lavoro"><svg viewBox="0 0 16 16"><rect x="1.5" y="3" width="6" height="10" fill="none" stroke="#5cb8ff"/><rect x="8.5" y="3" width="6" height="10" fill="none" stroke="#ffb057"/></svg><span>Un riquadro per agente</span></button>
+        </div>
+        <div class="colonna">
+          <button class="sceltaLayout" data-layout="2" title="Due riquadri affiancati"><svg viewBox="0 0 16 16"><rect x="1.5" y="3" width="6" height="10" fill="none" stroke="currentColor"/><rect x="8.5" y="3" width="6" height="10" fill="none" stroke="currentColor"/></svg><span>2 riquadri</span></button>
+          <button class="sceltaLayout" data-layout="4" title="Quattro riquadri"><svg viewBox="0 0 16 16"><rect x="1.5" y="1.5" width="6" height="6" fill="none" stroke="currentColor"/><rect x="8.5" y="1.5" width="6" height="6" fill="none" stroke="currentColor"/><rect x="1.5" y="8.5" width="6" height="6" fill="none" stroke="currentColor"/><rect x="8.5" y="8.5" width="6" height="6" fill="none" stroke="currentColor"/></svg><span>4 riquadri</span></button>
+        </div>
+      </div>
+      <div class="titoloPannello">Riquadri</div>
+    </div>
+    <div class="pannello" data-scheda="vista" hidden>
+      <div class="strumenti">
+        <button class="grande interruttore" id="btnGestioneFogli" title="Gestione fogli: tutti i fogli dei multifogli, con le miniature">
+          <svg viewBox="0 0 32 32"><rect x="7" y="4" width="18" height="13" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="4" y="9" width="18" height="13" style="fill:var(--f2)" stroke="currentColor" stroke-width="1.5"/><path d="M7 26h18" stroke="#5cb8ff" stroke-width="2"/></svg>
+          <span>Gestione fogli</span></button>
+        <div class="colonna">
+          <button id="btnFoglioPrec" title="Foglio precedente (PgSu)"><svg viewBox="0 0 16 16"><path d="M10 3L5 8l5 5" fill="none" stroke="currentColor" stroke-width="1.6"/></svg><span>Foglio precedente</span></button>
+          <button id="btnFoglioSucc" title="Foglio successivo (PgGiù)"><svg viewBox="0 0 16 16"><path d="M6 3l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.6"/></svg><span>Foglio successivo</span></button>
+        </div>
+      </div>
+      <div class="titoloPannello">Fogli</div>
+    </div>
+    <div class="pannello" data-scheda="vista" hidden>
+      <div class="strumenti">
+        <button class="grande" id="btnSalvaPng" title="Salva un'immagine PNG del riquadro attivo">
+          <svg viewBox="0 0 32 32"><rect x="5" y="5" width="22" height="22" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M9 22l6-7 4 4 3-3 3 6z" fill="#5fd394"/><path d="M16 3v9M12.5 8.5L16 12l3.5-3.5" stroke="#5cb8ff" stroke-width="1.6" fill="none"/></svg>
+          <span>Salva PNG</span></button>
+      </div>
+      <div class="titoloPannello">Esporta</div>
+    </div>
+  </section>
+
+  <main id="centro">
+    <aside id="pannelloFogli" hidden>
+      <div class="testaPannello">
+        <span>FOGLI</span>
+        <div class="gruppoBottoni" role="group" aria-label="Raggruppa i fogli">
+          <button data-gruppo="doc" class="acceso" title="Raggruppa per multifoglio">Fogli</button>
+          <button data-gruppo="agente" title="Raggruppa per agente">Agenti</button>
+        </div>
+        <button id="chiudiFogli" class="chiudi" title="Chiudi">×</button>
+      </div>
+      <div id="elencoFogli"></div>
+    </aside>
+
+    <div id="area">
+      <div id="schedeDoc" role="tablist"></div>
+      <div id="viewport">
+        <div id="riquadri"></div>
+        <div id="strumentiVista" role="toolbar" aria-label="Strumenti">
+          <button class="attrezzo acceso" data-modo="sel" title="Seleziona (Esc): clic sugli oggetti o finestra"><svg viewBox="0 0 16 16"><path d="M3 2l9 5-4 1 2.5 4.5-1.6.9L6.4 9 3 12z" fill="currentColor"/></svg></button>
+          <button class="attrezzo" data-modo="pan" title="Panoramica (P): trascina il disegno. Sempre: rotella o tasto destro trascinato"><svg viewBox="0 0 16 16"><path d="M5 9V4.5a1 1 0 012 0V8M7 8V3a1 1 0 012 0v5M9 8V3.8a1 1 0 012 0V9M11 9V6a1 1 0 012 0v4c0 3-2 5-4.5 5S5 14 4 12.5L2.5 10a1 1 0 011.6-1.2L5 10" fill="none" stroke="currentColor" stroke-width="1.1"/></svg></button>
+          <button class="attrezzo" data-modo="area" title="Seleziona area per Claude (CH)"><svg viewBox="0 0 16 16"><rect x="2" y="3" width="12" height="10" fill="rgba(255,167,38,.18)" stroke="#ffb057" stroke-dasharray="2 1.4"/></svg></button>
+          <button class="attrezzo" data-modo="punto" title="Nota su un punto per Claude (NO)"><svg viewBox="0 0 16 16"><path d="M8 15s-5-5.2-5-8.5a5 5 0 0110 0C13 9.8 8 15 8 15z" fill="none" stroke="#ffb057" stroke-width="1.3"/><circle cx="8" cy="6.5" r="1.7" fill="#ffb057"/></svg></button>
+          <button class="attrezzo" data-modo="misura" title="Distanza (DI)"><svg viewBox="0 0 16 16"><path d="M2 11L11 2l3 3-9 9z" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="M5 8l1 1M7 6l1.5 1.5M9 4l1 1" stroke="#5cb8ff"/></svg></button>
+          <button class="attrezzo" data-modo="filo" title="Segui filo (FI): clic su un filo, si seleziona tutto il collegamento"><svg viewBox="0 0 16 16"><path d="M1.5 12h4l3-8h6" fill="none" stroke="#e070ff" stroke-width="1.6"/><circle cx="1.8" cy="12" r="1.4" fill="currentColor"/><circle cx="14.2" cy="4" r="1.4" fill="currentColor"/></svg></button>
+          <span class="sepStrum"></span>
+          <button data-comando="LINEA" title="Linea (L)"><svg viewBox="0 0 16 16"><path d="M3 13L13 3" stroke="currentColor" stroke-width="1.4"/><rect x="1.5" y="11.5" width="3" height="3" fill="none" stroke="#5cb8ff"/><rect x="11.5" y="1.5" width="3" height="3" fill="none" stroke="#5cb8ff"/></svg></button>
+          <button data-comando="RETTANGOLO" title="Rettangolo (REC)"><svg viewBox="0 0 16 16"><rect x="2.5" y="4" width="11" height="8" fill="none" stroke="currentColor" stroke-width="1.3"/></svg></button>
+          <button data-comando="TESTO" title="Testo (T)"><svg viewBox="0 0 16 16"><path d="M3.5 3.5h9M8 3.5v9.5" stroke="currentColor" stroke-width="1.6"/></svg></button>
+          <button data-comando="MATITA" title="Matita: schizzo per Claude (MAT)"><svg viewBox="0 0 16 16"><path d="M2.5 13.5l1-3.5 7-7 2.5 2.5-7 7z" fill="none" stroke="#ff2d78" stroke-width="1.3"/></svg></button>
+          <span class="sepStrum"></span>
+          <button id="btnAdatta2" title="Zoom estensioni"><svg viewBox="0 0 16 16"><path d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4" fill="none" stroke="currentColor" stroke-width="1.3"/></svg></button>
+        </div>
+        <div id="risultati" hidden>
+          <div class="testaRis"><span id="titoloRis"></span>
+            <button id="risPrec" title="Precedente">‹</button><button id="risSucc" title="Successivo">›</button>
+            <button id="risChiudi" class="chiudi" title="Chiudi">×</button></div>
+          <ol id="voceRis"></ol>
+        </div>
+        <div id="dialogoRichiesta" hidden role="dialog" aria-labelledby="titoloDialogo">
+          <div class="testaDialogo"><span id="titoloDialogo">Chiedi a Claude</span><button class="chiudi" id="annullaRichiesta2" title="Annulla">×</button></div>
+          <div id="infoRichiesta" class="infoRichiesta"></div>
+          <label class="riga"><span>Per</span><select id="destRichiesta"></select></label>
+          <textarea id="testoRichiesta" rows="3" placeholder="Cosa devo fare qui? (es. sposta la quota, controlla i colori dei fili…)"></textarea>
+          <div class="piedeDialogo"><span class="suggerimento">Ctrl+Invio per inviare</span>
+            <button id="annullaRichiesta">Annulla</button><button id="inviaRichiesta" class="primario">Invia a Claude</button></div>
+        </div>
+        <div id="barraSel" hidden><span id="contaSel"></span><button id="chiediSel" class="primario">Chiedi a Claude…</button><button id="annullaSel" class="chiudi" title="Deseleziona (Esc)">×</button></div>
+        <div id="avvisi" aria-live="polite"></div>
+        <input id="inputTesto" class="inputTesto" hidden autocomplete="off" spellcheck="false" aria-label="Testo">
+        <div id="menuContesto" class="menuContesto" hidden role="menu"></div>
+        <div id="vuoto" hidden>
+          <div class="vuotoIcona"><svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="5" y="8" width="30" height="22" rx="2.5" opacity=".55"/><path d="M5 25h30M27 25v5" opacity=".55"/>
+            <path d="M10 20h5l3-7h6" stroke-width="2"/><circle cx="10" cy="20" r="1.6" fill="currentColor"/><circle cx="24" cy="13" r="1.6" fill="currentColor"/>
+            <path d="M29.5 14.5l4-4 2 2-4 4-2.6.6z" stroke-width="1.4"/></svg></div>
+          <div class="vuotoTitolo">Nessun disegno aperto</div>
+          <div class="vuotoTesto">Quando Claude apre o modifica un DWG lo vedi comparire qui, mentre lo disegna.</div>
+          <div class="vuotoTasti"><span><kbd>L</kbd>linea</span><span><kbd>T</kbd>testo</span><span><kbd>CH</kbd>chiedi a Claude</span><span><kbd>?</kbd>tutti i comandi</span></div>
+        </div>
+        <div id="rigaComando">
+          <div id="storiaComandi" aria-live="polite"></div>
+          <ul id="suggerimenti" class="suggerimenti" hidden role="listbox"></ul>
+          <div class="prompt">
+            <span class="promptIcona">▸</span>
+            <span id="promptCmd" class="promptCmd" hidden></span>
+            <span id="comandoCorrente" hidden></span>
+            <input id="cmdInput" autocomplete="off" spellcheck="false" placeholder="Digitare un comando (? per l'elenco)" aria-label="Riga di comando">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <aside id="palette">
+      <div id="maniglia" class="maniglia" title="Trascina per allargare il pannello"></div>
+      <nav class="schedePalette" role="tablist">
+        <button data-tab="claude" class="attiva" role="tab">Claude</button>
+        <button data-tab="chat" role="tab">Chat <span id="badgeTabChat" class="badge" hidden></span></button>
+        <button data-tab="richieste" role="tab">Richieste <span id="badgeRich" class="badge" hidden></span></button>
+        <button data-tab="proprieta" role="tab">Proprietà</button>
+        <button data-tab="layer" role="tab">Layer</button>
+      </nav>
+      <section class="tabPalette" data-tab="claude">
+        <div class="sezAgenti">
+          <div class="etichettaSez">Agenti <span id="nAgenti"></span></div>
+          <ul id="agenti"></ul>
+        </div>
+        <section class="staFacendo">
+          <div class="etichettaSez">Sta facendo <span id="agenteSta" class="agenteNome"></span></div>
+          <div id="pensiero" class="pensiero vuoto">In attesa di istruzioni…</div>
+          <div class="barraPasso"><div id="barraPasso"></div></div>
+        </section>
+        <section class="sezPassi">
+          <div class="etichettaSez">Passi <span id="nPassi"></span></div>
+          <ol id="passi"></ol>
+        </section>
+      </section>
+      <section class="tabPalette tabChat" data-tab="chat" hidden>
+        <nav id="filiChat" class="filiChat" role="tablist" aria-label="Chat"></nav>
+        <div id="infoFilo" class="infoFilo"></div>
+        <div id="statoAscolto" class="statoAscolto" hidden></div>
+        <div id="flussoChat" class="flussoChat">
+          <div id="chatVuota" class="chatVuota">
+            <div class="saluto">Su cosa lavoriamo?</div>
+            <div class="sottoSaluto">Scrivi a Claude cosa fare sul disegno. Se il lavoro è grande, chiedigli di aprire degli agenti: ognuno avrà qui la sua chat.</div>
+            <div class="suggerimentiChat">
+              <button data-sugg="Controlla le sovrapposizioni di questo foglio">Controlla le sovrapposizioni</button>
+              <button data-sugg="Spiegami cosa c'è in questo foglio">Spiegami il foglio</button>
+              <button data-sugg="Apri degli agenti e dividi il lavoro: ">Dividi il lavoro fra più agenti</button>
+            </div>
+          </div>
+          <ol id="messaggi"></ol>
+        </div>
+        <div class="compositore">
+          <div class="scatolaChat">
+            <textarea id="testoChat" rows="1" placeholder="Scrivi a Claude…"></textarea>
+            <div class="pianoChat">
+              <span id="modelloComposer" class="modelloComposer"></span>
+              <span class="riempi"></span>
+              <button id="inviaChat" class="invioTondo" title="Invia (Invio)" disabled><svg viewBox="0 0 16 16"><path d="M8 13V3.5M3.5 8L8 3.5 12.5 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+            </div>
+          </div>
+          <div class="notaChat">Invio per inviare · Maiusc+Invio per andare a capo</div>
+        </div>
+      </section>
+      <section class="tabPalette" data-tab="richieste" hidden>
+        <div class="introTab">Seleziona un'area (<b>CH</b>), metti una nota su un punto (<b>NO</b>) o manda uno schizzo: Claude riceve la zona, i testi e l'immagine.</div>
+        <ol id="richieste"></ol>
+      </section>
+      <section class="tabPalette" data-tab="proprieta" hidden>
+        <div id="proprieta" class="proprieta"><div class="introTab">Nessun oggetto selezionato. Clic su un oggetto o trascina una finestra.</div></div>
+      </section>
+      <section class="tabPalette" data-tab="layer" hidden>
+        <div class="introTab" id="introLayer"></div>
+        <ul id="layer"></ul>
+      </section>
+    </aside>
+  </main>
+
+  <footer id="barraStato">
+    <span id="coord" class="coord">0.0000, 0.0000, 0.0000</span>
+    <span class="tasto acceso">MODELLO</span>
+    <span class="tasto" id="stGriglia" title="Griglia (F7)">GRIGLIA</span>
+    <span class="tasto" id="stOrto" title="Ortogonale: solo orizzontale e verticale (F8, o tieni premuto Maiusc)">ORTO</span>
+    <span class="tasto" id="stSnap" title="Aggancio a estremi, punti medi e centri (F3)">OSNAP</span>
+    <span class="tasto acceso" id="stLwt" title="Spessori di linea">LWT</span>
+    <span class="tasto acceso" id="stSegui" title="Segui Claude">SEGUI</span>
+    <span id="navFoglio" class="navFoglio" hidden><button id="navPrec" title="Foglio precedente">◀</button><span id="navTesto"></span><button id="navSucc" title="Foglio successivo">▶</button></span>
+    <button id="stBozza" class="statoBozza" hidden title="Modifiche non salvate nel DWG: clic per salvare (Ctrl+S)"></button>
+    <span class="riempi"></span>
+    <span id="modoTesto" class="info"></span>
+    <span id="contaOggetti" class="info"></span>
+    <span id="zoomPerc" class="info"></span>
+  </footer>
+
+  <div id="menuImpostazioni" hidden role="menu">
+    <div class="voceMenu titolo">Riquadri</div>
+    <label class="voceMenu"><input type="radio" name="layout" value="singola"> Un foglio alla volta (con l'elenco degli agenti)</label>
+    <label class="voceMenu"><input type="radio" name="layout" value="agenti"> Un riquadro per ogni agente al lavoro</label>
+    <label class="voceMenu"><input type="radio" name="layout" value="2"> 2 riquadri</label>
+    <label class="voceMenu"><input type="radio" name="layout" value="4"> 4 riquadri</label>
+    <div class="voceMenu titolo">Gestione fogli</div>
+    <label class="voceMenu"><input type="checkbox" id="impFogli"> Mostra il pannello dei fogli</label>
+    <label class="voceMenu"><input type="radio" name="gruppo" value="doc"> Fogli per multifoglio</label>
+    <label class="voceMenu"><input type="radio" name="gruppo" value="agente"> Fogli per agente</label>
+    <div class="voceMenu titolo">Disegno</div>
+    <label class="voceMenu"><input type="checkbox" id="impAnima"> Animazioni (spento = modifiche subito)</label>
+    <label class="voceMenu"><input type="checkbox" id="impSegui"> La vista segue gli agenti</label>
+    <label class="voceMenu"><input type="checkbox" id="impScuro"> Tema scuro (interfaccia e disegno)</label>
+    <label class="voceMenu"><input type="checkbox" id="impSnap"> Aggancio (OSNAP)</label>
+  </div>
+</div>
+<div id="velo" class="velo" hidden><div id="modale" class="modale" role="dialog" aria-modal="true"></div></div>
+<script src="/static/app.js"></script>
+<script src="/static/disegno.js"></script>
+</body>
+</html>

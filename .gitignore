@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+build/
+dist/
+*.egg-info/
+.claude/
+# cache OCR e uscite delle conversioni locali
+.*_ocr.json
+examples/**/out/
