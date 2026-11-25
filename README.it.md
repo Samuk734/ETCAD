@@ -9,8 +9,9 @@ senza un CAD installato, converte i PDF in DWG con testi veri e modificabili, e 
 AutoCAD dove guardi Claude disegnare, ci parli in chat e disegni anche tu.
 
 ![Python](https://img.shields.io/badge/python-3.11%2B-3776AB?logo=python&logoColor=white)
-![MCP](https://img.shields.io/badge/MCP-66%20tool-6E56CF)
+![MCP](https://img.shields.io/badge/MCP-74%20tool-6E56CF)
 ![DWG](https://img.shields.io/badge/DWG-R2018-0A7BBB)
+![UI](https://img.shields.io/badge/UI-IT%20·%20EN%20·%20FR%20·%20ES-555)
 ![Licenza](https://img.shields.io/badge/licenza-MIT-green)
 
 [English](README.md) · [Italiano](README.it.md)
@@ -31,13 +32,15 @@ lunghezza. [Video completo (MP4, 72 s)](docs/media/demo.mp4)*
 | 🖥️ **Vista dal vivo** | Una pagina locale in stile AutoCAD: vedi Claude disegnare passo per passo con il suo ragionamento, gli scrivi in chat **senza chiave API** (i messaggi arrivano alla tua sessione di Claude Code), gli indichi le zone, disegni e modifichi anche tu e salvi nel DWG. |
 | 📄 **PDF → DWG** | I PDF vettoriali dove il testo è fatto di tratti di penna (i plot dei CAD con font SHX) diventano DWG con **entità TEXT vere**, il cartiglio come blocco con attributi e un rapporto da rivedere. |
 | ✏️ **DWG senza CAD** | Legge, modifica e crea DWG nativi con `ezdxf` e l'ODA File Converter gratuito: modifiche in blocco, cerca e sostituisci (anche Ø ° ±), attributi del cartiglio, copia di zone fra disegni, backup automatici. |
-| 🔌 **Strumenti per i cablaggi** | Segue un filo, trova il posto libero per una scritta, confronta due DWG per contenuto, fa la distinta dei materiali dalle schede cavo in Excel, dimensiona i cavi e dà i colori dei fili (CEI EN 60204-1). |
+| 🔌 **Strumenti per i cablaggi** | Segue un filo, rinumera fili e morsetti, cerca un testo in un'intera cartella di disegni, legge una tabella disegnata in Excel, confronta due DWG per contenuto, fa la distinta dei materiali dalle schede cavo, dimensiona i cavi e dà i colori dei fili (CEI EN 60204-1). |
+| 📐 **Disegni nuovi da una specifica** | Una scheda cavo A3 completa in DWG da un breve JSON: connettori circolari (M8/M12/M23) o morsettiere, fili colorati, schermo, sezione, tabella dei pin, distinta, quota, cartiglio. |
+| 🌍 **Quattro lingue** | La vista parla italiano, inglese, francese e spagnolo (selettore con le bandierine nella barra del titolo); i nomi dei comandi seguono AutoCAD nella lingua scelta (LINE, LIGNE, LÍNEA…) e tutti gli alias valgono in tutte le lingue. |
 | 🤖 **Sottoagenti** | Claude divide il lavoro fra più agenti: ognuno ha la sua chat nella pagina, con **modello, effort e ragionamento**, e il suo riquadro. |
 | 🏭 **SPAC Automazione CAD (facoltativo)** | Se c'è, anche `accoreconsole` senza interfaccia, il database della commessa e l'automazione COM dal vivo. Tutto il resto funziona senza. |
 
 ## I più usati
 
-66 tool in tutto, [elenco completo](README.md#all-66-tools):
+74 tool in tutto, [elenco completo](README.md#all-74-tools):
 
 | Tool | Cosa fa |
 |---|---|
@@ -52,6 +55,9 @@ lunghezza. [Video completo (MP4, 72 s)](docs/media/demo.mp4)*
 | `dwg_traccia_fili` | Segue un filo da un punto: entità collegate, capi liberi e le scritte vicine |
 | `dwg_confronta` | Cosa cambia davvero fra due DWG (o due cartelle), indipendentemente dagli handle |
 | `cablaggio_distinta` | Distinta materiali dalle schede cavo (guaine, puntali, connettori, cavi, lunghezze), in Excel |
+| `dwg_cerca` | Cerca un testo in tutti i DWG di una cartella: file, foglio, layer, handle e posizione di ogni risultato |
+| `dwg_rinumera` | Rinumera fili, morsetti o pin in ordine di lettura, con lo stesso numero ai due capi di un filo |
+| `scheda_cavo_crea` | Disegna in DWG una scheda cavo completa (o uno sdoppiatore, o uno schema ingressi) da una specifica JSON |
 
 ## La vista dal vivo
 
@@ -70,9 +76,15 @@ lunghezza. [Video completo (MP4, 72 s)](docs/media/demo.mp4)*
 </tr>
 </table>
 
+<img src="docs/img/lingue.png" alt="La vista in inglese con il menu delle lingue aperto: Italiano, English, Français, Español con le bandierine">
+
+*La stessa pagina in inglese: scegli Italiano, English, Français o Español dalla bandierina nella barra del titolo.
+La prima volta segue la lingua del browser; la scelta resta.*
+
 Tutto gira su `127.0.0.1`: nessun servizio esterno, nessun caricamento.
 
-**Comandi di disegno** (nella riga di comando, valgono gli alias di AutoCAD): `LINEA` (L), `POLILINEA` (PL),
+**Comandi di disegno** (nella riga di comando valgono gli alias di AutoCAD e i nomi di tutte le lingue):
+`LINEA` (L), `POLILINEA` (PL),
 `RETTANGOLO` (REC), `CERCHIO` (C), `ARCO` (A), `TESTO` (T, DT), `QUOTA` (DIM), `ETICHETTA` (LE), `SPOSTA` (M),
 `COPIA` (CO), `CANCELLA` (E), `MODTESTO` (ED), `PROPRIETA` (PR), `ANNULLA` (U), `RIPETI`, `SALVA` (Ctrl+S),
 `DISTANZA` (DI), `AREA`, `ID`, `FILO` (segue un filo), `TROVA` (Ctrl+F), `ZOOM`, `PAN`, `ORTO` (F8), `OSNAP` (F3),
@@ -166,6 +178,10 @@ Chiedi a Claude, per esempio:
 - *"Segui il filo che parte dal pin 3 di -XS1 e dimmi dove arriva."*
 - *"Fammi la distinta dei materiali di tutte le schede cavo di questa cartella, in Excel."*
 - *"Apri due agenti: uno controlla i fogli 2-3, l'altro i fogli 4-6."*
+- *"In quali disegni di questa cartella c'è la morsettiera -X2?"*
+- *"Rinumera i fili del foglio 6 partendo da 2001."*
+- *"Disegnami la scheda di un cavo encoder M23 a 8 poli, schermato, 5 m, verso la morsettiera -X20."*
+- *"Leggi in Excel la tabella della distinta del foglio 3."*
 
 ### Lavorare nella vista
 
@@ -195,7 +211,8 @@ python examples/video/registra_demo.py video   # registra di nuovo la demo (serv
 ```
 
 Sviluppato e provato su Windows 10 con Python 3.12. Il nucleo (ezdxf, PyMuPDF, shapely) è multipiattaforma; i tool
-SPAC e COM funzionano solo su Windows.
+SPAC e COM funzionano solo su Windows. La vista è in italiano, inglese, francese e spagnolo (`etcad/vista/static/i18n.js`
+e `i18n_testi.js`: le chiavi sono le frasi italiane, quindi per una lingua nuova basta un dizionario).
 
 ## Licenza
 

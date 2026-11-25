@@ -9,8 +9,9 @@ edit and create native DWG files, PDF → DWG with real, editable text, and an A
 Claude draw, chat with it and draw yourself.
 
 ![Python](https://img.shields.io/badge/python-3.11%2B-3776AB?logo=python&logoColor=white)
-![MCP](https://img.shields.io/badge/MCP-66%20tools-6E56CF)
+![MCP](https://img.shields.io/badge/MCP-74%20tools-6E56CF)
 ![DWG](https://img.shields.io/badge/DWG-R2018-0A7BBB)
+![UI](https://img.shields.io/badge/UI-IT%20·%20EN%20·%20FR%20·%20ES-555)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 [English](README.md) · [Italiano](README.it.md)
@@ -31,13 +32,15 @@ its length on request. [Full video (MP4, 72 s)](docs/media/demo.mp4)*
 | 🖥️ **Live view** | A local AutoCAD-style page: watch Claude draw step by step with its reasoning, chat with it **without an API key** (messages go to your Claude Code session), point at areas, and draw and edit yourself, then save back to DWG. |
 | 📄 **PDF → DWG** | Vector PDFs whose text is just pen strokes (typical CAD plots with SHX fonts) become DWGs with **real TEXT entities**, a title-block block with attributes, and a review report. |
 | ✏️ **DWG without a CAD** | Read, edit and create native DWG files with `ezdxf` and the free ODA File Converter: batch edits, find & replace (Ø ° ± aware), title-block attributes, copying zones between drawings, automatic backups. |
-| 🔌 **Wiring tools** | Follow a wire, find a free spot for a label, compare two DWGs by content, a bill of materials from cable sheets to Excel, cable sizing and wire colours (EN 60204-1). |
+| 🔌 **Wiring tools** | Follow a wire, renumber wires and terminals, find a text in a whole folder of drawings, read a drawn table into Excel, compare two DWGs by content, a bill of materials from cable sheets, cable sizing and wire colours (EN 60204-1). |
+| 📐 **New drawings from a spec** | A complete A3 cable sheet in DWG from a short JSON: circular connectors (M8/M12/M23) or terminal blocks, coloured wires, shield, cross-section, pinout table, BOM, dimension, title block. |
+| 🌍 **Four languages** | The live view speaks Italian, English, French and Spanish (flag selector in the title bar); command names follow the localized AutoCAD (LINE, LIGNE, LÍNEA…) and every alias works in every language. |
 | 🤖 **Sub-agents** | Claude can split the work among agents: each one gets its own chat in the page, with **model, effort and its reasoning**, and its own pane. |
 | 🏭 **SPAC Automazione CAD (optional)** | If present, also headless `accoreconsole`, the project database and live COM automation. Everything else works without it. |
 
 ## Highlights
 
-The tools you will use most (66 in total, [full list below](#all-66-tools)):
+The tools you will use most (74 in total, [full list below](#all-74-tools)):
 
 | Tool | What it does |
 |---|---|
@@ -52,6 +55,9 @@ The tools you will use most (66 in total, [full list below](#all-66-tools)):
 | `dwg_traccia_fili` | Follow a wire from a point: connected entities, free ends and the labels near them |
 | `dwg_confronta` | What really changed between two DWGs (or two folders), independent of handles |
 | `cablaggio_distinta` | Bill of materials (sleeves, ferrules, connectors, cables, lengths) from cable sheets, to Excel |
+| `dwg_cerca` | Find a text in every DWG of a folder: file, sheet, layer, handle and position of each hit |
+| `dwg_rinumera` | Renumber wires, terminals or pins in reading order, keeping both ends of a wire equal |
+| `scheda_cavo_crea` | Draw a complete cable sheet (or a Y splitter, or an inputs schematic) in DWG from a JSON spec |
 
 ## The live view
 
@@ -70,9 +76,15 @@ The tools you will use most (66 in total, [full list below](#all-66-tools)):
 </tr>
 </table>
 
+<img src="docs/img/lingue.png" alt="The live view in English with the language menu open: Italiano, English, Français, Español with their flags">
+
+*The same page in English: pick Italiano, English, Français or Español from the flag in the title bar. The first
+time it follows the browser language; the choice is remembered.*
+
 Everything runs on `127.0.0.1`: no external service, no upload.
 
-**Drawing commands** (type them in the command line, AutoCAD aliases work): `LINEA` (L), `POLILINEA` (PL),
+**Drawing commands** (type them in the command line, AutoCAD aliases and the names of every language work; here
+the Italian names): `LINEA` (L), `POLILINEA` (PL),
 `RETTANGOLO` (REC), `CERCHIO` (C), `ARCO` (A), `TESTO` (T, DT), `QUOTA` (DIM), `ETICHETTA` (LE), `SPOSTA` (M),
 `COPIA` (CO), `CANCELLA` (E), `MODTESTO` (ED), `PROPRIETA` (PR), `ANNULLA` (U), `RIPETI`, `SALVA` (Ctrl+S),
 `DISTANZA` (DI), `AREA`, `ID`, `FILO` (follow a wire), `TROVA` (Ctrl+F), `ZOOM`, `PAN`, `ORTO` (F8), `OSNAP` (F3),
@@ -163,6 +175,10 @@ Ask Claude, for example:
 - *"Follow the wire that starts at pin 3 of -XS1 and tell me where it ends."*
 - *"Make the bill of materials of all the cable sheets in this folder, in Excel."*
 - *"Open two agents: one checks sheets 2-3, the other sheets 4-6."*
+- *"In which drawings of this folder is terminal block -X2 used?"*
+- *"Renumber the wires of sheet 6 starting from 2001."*
+- *"Draw the cable sheet of an M23 8-pole encoder cable, shielded, 5 m, to terminal block -X20."*
+- *"Read the bill of materials table of sheet 3 into Excel."*
 
 ### Working in the live view
 
@@ -181,9 +197,25 @@ When you work on DWG files with ETCAD, open the live view (vista_apri), send you
 show every change with vista_mostra and keep vista_ascolta armed to read my messages from the page.
 ```
 
-## All 66 tools
+## All 74 tools
 
 Tool names and descriptions are in Italian (the project was born in Italy); Claude understands them in any language.
+
+<details>
+<summary><b>More operations</b> (8)</summary>
+
+| Tool | |
+|---|---|
+| `dwg_cerca` | Find a text (or a regex) in many DWG/DXF, folders and subfolders included, with sheet, layer, handle, position |
+| `dwg_rinumera` | Renumber wires, terminals or pins in reading order (rows or columns, sheet by sheet), preview first |
+| `dwg_unisci` | Merge several drawings into one: side by side, or one layer per drawing (multi-sheet); clashing blocks renamed |
+| `dwg_pulisci` | Remove duplicates, zero-length lines, empty texts; purge unused blocks, layers, styles, linetypes |
+| `dwg_versione` | Save a DWG as version 2000, 2004, 2007, 2010, 2013 or 2018, or as DXF |
+| `dwg_tabella` | Read a table drawn with lines and texts (BOM, pinout, sheet list) into rows and Excel |
+| `scheda_cavo_crea` | Draw a cable sheet, a Y splitter or an inputs schematic from a JSON spec, with preview and graphic check |
+| `dwg_pdf_fogli` | One vector PDF with a page per sheet, for multi-sheet and side-by-side drawings |
+
+</details>
 
 <details>
 <summary><b>Live view</b> (13)</summary>
@@ -309,7 +341,9 @@ python examples/video/registra_demo.py video   # re-record the demo (needs playw
 ```
 
 Developed and tested on Windows 10 with Python 3.12. The core (ezdxf, PyMuPDF, shapely) is cross-platform; the
-SPAC and COM tools are Windows only. The live view's interface is in Italian.
+SPAC and COM tools are Windows only. The live view's interface is in Italian, English, French and Spanish
+(`etcad/vista/static/i18n.js` and `i18n_testi.js`: the keys are the Italian sentences, so adding a language means
+adding one dictionary).
 
 ## License
 

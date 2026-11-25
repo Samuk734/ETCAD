@@ -5,4 +5,4 @@ testi veri, controlla sovrapposizioni, segue i fili, confronta disegni.
 Con SPAC Automazione CAD (AutoCAD OEM): anche accoreconsole, database della commessa e automazione COM.
 """
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"

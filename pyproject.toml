@@ -1,6 +1,6 @@
 [project]
 name = "etcad"
-version = "1.0.0"
+version = "1.1.0"
 description = "MCP server for electrical CAD drawings: read, edit and create DWG without a CAD, PDF to DWG with real texts, and a live AutoCAD-style view where you and Claude draw together"
 readme = "README.md"
 license = "MIT"

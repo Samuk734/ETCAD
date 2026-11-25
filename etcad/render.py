@@ -171,6 +171,41 @@ def cad_pdf(percorso_o_doc, zona=None, testi_hershey: bool = True) -> bytes:
                                  render_box=BoundingBox2d([(z[0], z[1]), (z[2], z[3])]))
 
 
+def cad_pdf_pagine(percorso_o_doc, pagine: list, testi_hershey: bool = True) -> list[bytes]:
+    """Piu' pagine PDF dallo stesso disegno, letto e preparato una volta sola.
+
+    pagine = [(zona o None, [layer da spegnere])]: per i fogli affiancati basta la zona, per i multifogli a
+    layer si spengono i layer degli altri fogli."""
+    from ezdxf.addons.drawing import Frontend, RenderContext, layout
+    from ezdxf.addons.drawing import config as dcfg
+    from ezdxf.addons.drawing.pymupdf import PyMuPdfBackend
+    from ezdxf.math import BoundingBox2d
+    doc = _doc(percorso_o_doc)
+    if testi_hershey:
+        from . import hershey
+        hershey.esplodi_testi(doc)
+    cfg = dcfg.Configuration(background_policy=dcfg.BackgroundPolicy.CUSTOM, custom_bg_color="#ffffff00",
+                             color_policy=dcfg.ColorPolicy.COLOR,
+                             lineweight_policy=dcfg.LineweightPolicy.ABSOLUTE,
+                             lineweight_scaling=1.0)
+    settings = layout.Settings(fit_page=False, scale=1.0, max_stroke_width=0.02,
+                               min_stroke_width=0.05, fixed_stroke_width=0.15)
+    out = []
+    for zona, spenti in pagine:
+        ctx = RenderContext(doc)
+        for nome in spenti or []:
+            for k in (nome, str(nome).lower()):
+                if k in ctx.layers:
+                    ctx.layers[k].is_visible = False
+        backend = PyMuPdfBackend()
+        Frontend(ctx, backend, config=cfg).draw_layout(doc.modelspace(), finalize=True)
+        z = _zona(zona, 0, 0) if zona else estensione(doc)
+        page = layout.Page(z[2] - z[0], z[3] - z[1], layout.Units.mm, margins=layout.Margins.all(0))
+        out.append(backend.get_pdf_bytes(page, settings=settings,
+                                         render_box=BoundingBox2d([(z[0], z[1]), (z[2], z[3])])))
+    return out
+
+
 def unisci_pdf(pagine_pdf: list[bytes], pdf_out: str) -> str:
     """Unisce PDF (bytes) in un unico file."""
     import pymupdf

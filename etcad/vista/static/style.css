@@ -508,6 +508,24 @@ body.trascina, body.trascina * { cursor: col-resize !important; user-select: non
 .voceMenu.titolo:hover { background: none; }
 .voceMenu input { accent-color: var(--accento); margin: 0; width: 14px; height: 14px; flex: none; }
 
+/* lingua dell'interfaccia: bandierina nella barra del titolo e menu */
+.bandiera { width: 20px; height: 14px; display: block; flex: none; border-radius: 3px; overflow: hidden;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, .28), inset 0 0 0 1px rgba(255, 255, 255, .12); }
+.bandieraLingua { display: inline-flex; }
+.btnTitolo .bandiera { width: 18px; height: 12px; }
+.codiceLingua { font: 600 11px var(--sans); letter-spacing: .05em; }
+#menuLingua { position: fixed; top: 38px; right: 196px; width: 220px; background: var(--vetro-forte); border: 1px solid var(--linea2);
+  border-radius: var(--r4); box-shadow: var(--ombra), var(--luce); padding: 6px; z-index: 20; animation: entra .15s ease-out;
+  -webkit-backdrop-filter: blur(14px) saturate(140%); backdrop-filter: blur(14px) saturate(140%); }
+.voceLingua { display: flex; align-items: center; gap: 11px; width: 100%; padding: 8px 10px; border: 0; border-radius: 8px;
+  background: none; color: var(--testo); font: inherit; text-align: left; cursor: pointer; }
+.voceLingua:hover { background: var(--f4); }
+.voceLingua .nomeLingua { flex: 1; }
+.voceLingua .codice { color: var(--testo3); font-size: 10.5px; font-weight: 600; letter-spacing: .06em; }
+.voceLingua.scelta { background: var(--accento-tenue); box-shadow: inset 0 0 0 1px var(--accento-bordo); }
+.voceLingua.scelta .codice { color: var(--accento); }
+.voceLingua.scelta .codice::after { content: "  ✓"; }
+
 /* ----------------------------------------------------------- barra di stato */
 #barraStato { display: flex; align-items: center; gap: 3px; padding: 0 10px; background: var(--f1);
   border-top: 1px solid var(--linea); color: var(--testo2); white-space: nowrap; overflow: hidden; }

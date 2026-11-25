@@ -938,7 +938,7 @@ function mostraPensiero(a, testo, genere = "pensiero") {
   aggiornaAgente(a);
   if (a !== agenteScelto()) return;
   const el = $("#pensiero");
-  el.className = `pensiero genere-${genere}`;
+  el.className = `pensiero genere-${genere} notrad`;              // il pensiero e' di Claude: non si traduce
   $("#agenteSta").textContent = S.agenti.size > 1 ? `— ${a.nome}` : "";
   $("#agenteSta").style.color = a.colore;
   clearInterval(digitazioni.get("p"));
@@ -957,7 +957,7 @@ function mostraPensieroScelto() {
   if (!a) return;
   const el = $("#pensiero");
   clearInterval(digitazioni.get("p"));
-  el.className = a.pensiero ? `pensiero genere-${a.genere}` : "pensiero vuoto";
+  el.className = a.pensiero ? `pensiero genere-${a.genere} notrad` : "pensiero vuoto";
   el.textContent = a.pensiero || "In attesa di istruzioni…";
   $("#agenteSta").textContent = S.agenti.size > 1 ? `— ${a.nome}` : "";
   $("#agenteSta").style.color = a.colore;
@@ -967,7 +967,7 @@ function voce(ev, classe = "", a = null) {
   if (classe) li.className = classe;
   if (a) { li.dataset.ag = a.nome; li.style.setProperty("--colAg", a.colore); }
   const tag = a && S.agenti.size > 1 ? `<span class="tagAg" style="color:${a.colore}">${esc(a.nome)}</span>` : "";
-  li.innerHTML = `<div class="riga1"><span class="ora">${esc(ev.ora || "")}</span>${tag}<span class="testo">${esc(ev.nota || ev.testo || "")}</span></div>`;
+  li.innerHTML = `<div class="riga1"><span class="ora">${esc(ev.ora || "")}</span>${tag}<span class="testo notrad">${esc(ev.nota || ev.testo || "")}</span></div>`;
   const lista = $("#passi");
   const giu = lista.scrollTop + lista.clientHeight >= lista.scrollHeight - 30;
   lista.appendChild(li);
@@ -1013,7 +1013,8 @@ function aggiornaAgente(a) {
   if (S.filo === a.nome) { disegnaTestaFilo(); aggiornaVivo(); }
   disegnaFili();
   const f = S.fogli.get(a.foglio);
-  a.el.querySelector(".doveAg").textContent = (f ? `${docDi(a.foglio)} · ${etichettaFoglio(f, false)} — ` : "") + (a.pensiero || "");
+  a.el.querySelector(".doveAg").innerHTML = (f ? `<span>${esc(docDi(a.foglio))} · ${esc(etichettaFoglio(f, false))} — </span>` : "") +
+    `<span class="notrad">${esc(a.pensiero || "")}</span>`;
   for (const el of $$(".schedaDoc")) {
     const lav = [...S.agenti.values()].some((x) => x.lavora && docDi(x.foglio) === el.dataset.doc);
     el.classList.toggle("lavora", lav);
@@ -1482,11 +1483,11 @@ function elMessaggio(m) {
   if (a) li.style.setProperty("--colAg", a.colore);
   const rif = m.rif ? `<span class="rif" data-rif="${m.rif}">richiesta #${m.rif}</span>` : "";
   if (ut) {
-    li.innerHTML = `<div class="fumetto">${formatta(m.testo)}</div>
+    li.innerHTML = `<div class="fumetto notrad">${formatta(m.testo)}</div>
       <div class="piedeMsg">${rif}<span class="oraMsg">${esc(oraBreve(m.ora))}</span></div>`;
   } else {
     li.innerHTML = `<div class="testaMsg"><span class="avatar" style="background:${a.colore}">${iniziale(m.da)}</span>
-      <b>${esc(m.da)}</b>${rif}<span class="oraMsg">${esc(oraBreve(m.ora))}</span></div><div class="corpoMsg">${formatta(m.testo)}</div>`;
+      <b class="notrad">${esc(m.da)}</b>${rif}<span class="oraMsg">${esc(oraBreve(m.ora))}</span></div><div class="corpoMsg notrad">${formatta(m.testo)}</div>`;
   }
   return li;
 }
@@ -1496,14 +1497,14 @@ function elRagionamento(filo) {
   li.className = "cot";
   li.style.setProperty("--colAg", a.colore);
   li.innerHTML = `<details><summary><span class="icoCot"></span><span class="titCot">Ragionamento</span>
-    <span class="ultCot"></span><span class="nCot"></span></summary><ol class="vociCot"></ol></details>`;
+    <span class="ultCot notrad"></span><span class="nCot"></span></summary><ol class="vociCot"></ol></details>`;
   return li;
 }
 function aggiungiACot(li, v) {
   const ol = li.querySelector(".vociCot");
   const x = document.createElement("li");
   x.className = v.tipo === "passo" ? "passoCot" : v.genere === "azione" ? "azioneCot" : "";
-  x.innerHTML = `<span class="oraCot">${esc(oraBreve(v.ora))}</span><span class="tCot">${v.tipo === "passo" ? v.testo : esc(v.testo)}</span>`;
+  x.innerHTML = `<span class="oraCot">${esc(oraBreve(v.ora))}</span><span class="tCot notrad">${v.tipo === "passo" ? v.testo : esc(v.testo)}</span>`;
   ol.appendChild(x);
   const n = ol.children.length;
   if (v.tipo !== "passo") li.querySelector(".ultCot").textContent = corto(v.testo, 90);

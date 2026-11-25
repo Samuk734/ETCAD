@@ -77,7 +77,7 @@ function dist(a, b) { return Math.hypot(b[0] - a[0], b[1] - a[1]); }
 /* ------------------------------------------------------------- utilita' */
 function trovaComando(t) {
   const q = String(t || "").trim().toUpperCase().replace(/^_+/, "");
-  return COMANDI.find((c) => c.n === q || c.a.includes(q)) || null;
+  return COMANDI.find((c) => c.n === q || c.a.includes(q) || aliasLingue(c.n).includes(q)) || null;
 }
 function fDisegno() {
   if (D.cmd) return S.fogli.get(D.cmd.foglio) || null;
@@ -413,10 +413,10 @@ async function inviaSalvataggio(f, copia) {
 function aggiornaPrompt() {
   const el = $("#promptCmd"), c = D.cmd;
   el.hidden = !c;
-  if (c) el.innerHTML = `<b>${c.nome}</b> ${(PROMPT[c.nome] || (() => ""))(c)}`;
+  if (c) el.innerHTML = `<b>${nomeCmd(c.nome)}</b> ${(PROMPT[c.nome] || (() => ""))(c)}`;
   $$("[data-comando]").forEach((b) => b.classList.toggle("inCorso", !!c && b.dataset.comando === c.nome));
   $("#cmdInput").placeholder = c ? "" : "Digitare un comando (? per l'elenco)";
-  if (c) $("#modoTesto").textContent = c.sk ? `${c.nome} · SCHIZZO` : c.nome;
+  if (c) $("#modoTesto").textContent = c.sk ? `${nomeCmd(c.nome)} · ${traduci("SCHIZZO")}` : nomeCmd(c.nome);
   else if (S.modo === "sel") $("#modoTesto").textContent = "";
 }
 function eseguiComando(t) {
@@ -454,7 +454,7 @@ function avvia(nome, r) {
   annullaComando(true);
   const sk = D.schizzo || nome === "MATITA" || nome === "NUVOLA";
   D.cmd = { nome, foglio: r.foglio, punti: [], dati: {}, sk, fase: "punto" };
-  rigaComando(`<b>_${nome}</b>${sk ? "  (schizzo per Claude)" : ""}`);
+  rigaComando(`<b>_${nomeCmd(nome)}</b>${sk ? "  (schizzo per Claude)" : ""}`);
   if (CMD_SELEZIONE.has(nome)) {
     const haSel = S.selFoglio === r.foglio && S.sel.size;
     if (nome === "CANCELLA" && haSel) { cancellaSelezione(); D.cmd = null; aggiornaPrompt(); return; }
@@ -585,12 +585,13 @@ function invio() {
 function opzione(t) {
   const c = D.cmd, f = S.fogli.get(c.foglio);
   const o = t.trim().toUpperCase();
-  if ((o === "C" || o === "CHIUDI") && c.punti.length > 2) {
+  const vale = (it, ...corte) => corte.includes(o) || o === it || (OPZIONI_CMD[it] || []).includes(o);   // anche EN/FR/ES
+  if (vale("CHIUDI", "C") && c.punti.length > 2) {
     if (c.nome === "LINEA") { aggiungiOggetto(f, { tipo: "linea", p0: c.punti[c.punti.length - 1], p1: c.punti[0] }, c.sk); fine(); return; }
     if (c.nome === "POLILINEA") { aggiungiOggetto(f, { tipo: "polilinea", punti: c.punti.slice(), chiusa: true }, c.sk); fine(); return; }
   }
-  if (o === "U" || o === "ANNULLA") { annulla(); return; }
-  if (o === "F" || o === "FINE" || o === "E" || o === "ESCI") { invio(); return; }
+  if (vale("ANNULLA", "U")) { annulla(); return; }
+  if (vale("FINE", "F", "E", "ESCI")) { invio(); return; }
   if (trovaComando(o)) { eseguiComando(o); return; }
   rigaComando(`Punto o opzione non valida: «${esc(t)}»`, "err");
 }
@@ -739,7 +740,7 @@ function tastoDestro(r, px, py, e) {
   const sel = f && S.selFoglio === r.foglio ? S.sel.size : 0;
   const ogg = sel === 1 ? oggDi(f, [...S.sel][0]) : null;
   const voci = [];
-  if (D.ultimo) voci.push({ t: `Ripeti ${D.ultimo}`, k: "Invio", fn: () => eseguiComando(D.ultimo) });
+  if (D.ultimo) voci.push({ t: `Ripeti ${nomeCmd(D.ultimo)}`, k: "Invio", fn: () => eseguiComando(D.ultimo) });
   if (sel) {
     voci.push(null, { t: "Sposta", k: "M", fn: () => eseguiComando("SPOSTA") }, { t: "Copia", k: "CO", fn: () => eseguiComando("COPIA") },
       { t: "Cancella", k: "Canc", fn: () => eseguiComando("CANCELLA") });
@@ -904,12 +905,15 @@ function aggiornaSugg() {
   const v = $("#cmdInput").value.trim().toUpperCase();
   const ul = $("#suggerimenti");
   if (!v || (D.cmd && !/^[A-Z?]{2,}$/.test(v)) || /^[-@\d.]/.test(v)) { nascondiSugg(); return; }
-  const punteggio = (c) => c.a.includes(v) || c.n === v ? 0 : c.a.some((a) => a.startsWith(v)) ? 1 : c.n.startsWith(v) ? 2
-    : c.d.toUpperCase().includes(v) ? 3 : 9;
+  const punteggio = (c) => {                              // nomi e alias valgono in tutte le lingue
+    const nomi = [c.n, ...aliasLingue(c.n)];
+    return c.a.includes(v) || nomi.includes(v) ? 0 : c.a.some((a) => a.startsWith(v)) ? 1 : nomi.some((x) => x.startsWith(v)) ? 2
+      : c.d.toUpperCase().includes(v) || traduci(c.d).toUpperCase().includes(v) ? 3 : 9;
+  };
   D.sugg = v === "?" ? COMANDI.slice() : COMANDI.map((c) => [punteggio(c), c]).filter((x) => x[0] < 9).sort((a, b) => a[0] - b[0]).map((x) => x[1]).slice(0, 8);
   D.iSugg = D.sugg.length ? 0 : -1;
   if (!D.sugg.length) { nascondiSugg(); return; }
-  ul.innerHTML = D.sugg.map((c, i) => `<li data-i="${i}" class="${i === D.iSugg ? "corrente" : ""}"><b>${c.n}</b><span class="alias">${c.a.slice(0, 2).join(" ")}</span><span class="descr">${esc(c.d)}</span></li>`).join("");
+  ul.innerHTML = D.sugg.map((c, i) => `<li data-i="${i}" class="${i === D.iSugg ? "corrente" : ""}"><b class="notrad">${nomeCmd(c.n)}</b><span class="alias notrad">${c.a.slice(0, 2).join(" ")}</span><span class="descr">${esc(c.d)}</span></li>`).join("");
   ul.hidden = false;
   ul.querySelectorAll("li").forEach((li) => { li.onmousedown = (e) => { e.preventDefault(); const c = D.sugg[+li.dataset.i]; $("#cmdInput").value = ""; nascondiSugg(); $("#cmdInput").blur(); eseguiComando(c.n); }; });
 }
@@ -962,7 +966,7 @@ function aiuto() {
   modale(`<h3>Comandi</h3><p class="piccolo">Scrivi il nome o l'alias e premi Invio (o Spazio). Durante un comando: <code>x,y</code> punto,
     <code>@dx,dy</code> relativo, <code>@d&lt;ang</code> polare, un numero = distanza lungo il cursore. Invio o tasto destro = fine, Esc = annulla.</p>
     <div class="grigliaAiuto">${gruppi.map((g) => `<section><h4>${esc(g)}</h4>${COMANDI.filter((c) => c.g === g).map((c) =>
-      `<div class="vocAiuto"><b>${c.n}</b>${c.a.length ? `<kbd>${esc(c.a[0])}</kbd>` : ""}<span>${esc(c.d)}</span></div>`).join("")}</section>`).join("")}</div>
+      `<div class="vocAiuto"><b class="notrad">${nomeCmd(c.n)}</b>${c.a.length ? `<kbd class="notrad">${esc(c.a[0])}</kbd>` : ""}<span>${esc(c.d)}</span></div>`).join("")}</section>`).join("")}</div>
     <p class="piccolo">Tasti: <kbd>F3</kbd> OSNAP · <kbd>F7</kbd> griglia · <kbd>F8</kbd> ORTO (o tieni Maiusc) · <kbd>Canc</kbd> cancella ·
     <kbd>Ctrl+Z</kbd> / <kbd>Ctrl+Y</kbd> annulla / ripeti · <kbd>Ctrl+S</kbd> salva · <kbd>Ctrl+A</kbd> seleziona tutto · doppio clic su un testo = modifica.</p>`,
   [{ t: "Chiudi", primario: true }]);

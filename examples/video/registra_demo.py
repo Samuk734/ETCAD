@@ -391,6 +391,17 @@ def foto():
             mostra(page, chiave(2))
             page.wait_for_timeout(1500)
             page.screenshot(path=os.path.join(IMG, "vista_chiara.png"))
+            # 6) interfaccia in inglese, con il menu delle lingue aperto
+            page.click('button[data-scheda="vista"]')
+            page.click("#btnTema")
+            page.click('button[data-scheda="inizio"]')
+            page.evaluate("() => impostaLingua('en')")
+            mostra(page, chiave(4))
+            page.click('button[data-tab="claude"]')
+            page.click("#btnLingua")
+            page.wait_for_timeout(900)
+            page.screenshot(path=os.path.join(IMG, "lingue.png"))
+            page.evaluate("() => impostaLingua('it')")
             browser.close()
     finally:
         stop.set()

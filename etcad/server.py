@@ -533,6 +533,115 @@ def cablaggio_distinta(percorsi: str, xlsx_out: str = "", filtro: str = "*.dwg")
     return _j(st.distinta(_lista_percorsi(percorsi), xlsx_out, filtro))
 
 
+# ---------------------------------------------------------------------------
+# operazioni: cerca, rinumera, unisci, pulisci, versione, tabelle, schede, PDF dei fogli
+# ---------------------------------------------------------------------------
+
+@strumento
+def dwg_cerca(percorsi: str, testo: str, regex: bool = False, maiuscole: bool = False, parola_intera: bool = False,
+              filtro: str = "*", blocchi: bool = True, max_risultati: int = 300) -> str:
+    """Cerca un testo in molti DWG/DXF: file o cartelle (anche sottocartelle), separati da ';'. Per ogni
+    risultato: file, foglio (multifoglio a layer o fogli affiancati), layer, handle, posizione in mm e se e'
+    un testo, un attributo (cartiglio) o un testo dentro un blocco. Es. "in quali disegni compare il cavo
+    CAV-M12?", "dove c'e' il morsetto -X2?". Senza regex Ø/°/± trovano anche %%c/%%d/%%p."""
+    from . import operazioni as op
+    return _j(op.cerca(percorsi, testo, regex, maiuscole, parola_intera, filtro, blocchi, max_risultati))
+
+
+@strumento
+def dwg_rinumera(dwg: str, schema: str = r"\d+", inizio: int = 1, passo: int = 1, formato: str = "",
+                 ordine: str = "righe", zona: str = "", layer: str = "", uguali_insieme: bool = True,
+                 applica: bool = False, out_dwg: str = "", commessa: str = "") -> str:
+    """Rinumera numeri di fili, morsetti o pin: i testi che corrispondono per intero alla regex `schema`
+    (es. "\\d{4}" per i numeri filo, "W\\d+", "X2:\\d+") in ordine di lettura, foglio per foglio, per
+    "righe" (dall'alto, da sinistra) o "colonne". Con uguali_insieme lo stesso numero vecchio prende lo
+    stesso numero nuovo (un filo ha il numero ai due capi). formato es. "W{n}" o "{n:04d}"; vuoto =
+    cambia solo le cifre e tiene gli zeri iniziali. zona 'x0,y0,x1,y1'. applica=False = anteprima."""
+    from . import operazioni as op
+    src = _file(commessa, dwg)
+    res = op.rinumera(src, schema, inizio, passo, formato, ordine, _zona(zona), layer, uguali_insieme, applica, out_dwg)
+    if res.get("applicato"):
+        _vista_in_fondo([(res["dwg"], _stem(src))], f"rinumerati {res['testi_cambiati']} testi")
+    return _j(res)
+
+
+@strumento
+def dwg_unisci(file: str, uscita: str, modo: str = "affiancati", distanza: float = 20.0) -> str:
+    """Unisce piu' DWG/DXF (separati da ';', o una cartella) in un file solo. modo "affiancati": i disegni
+    uno accanto all'altro a `distanza` mm (come un _tutti_i_fogli); modo "layer": tutti all'origine, ogni
+    disegno sul layer "1", "2"... (struttura di un multifoglio). I blocchi con lo stesso nome ma
+    contenuto diverso (es. due CORNICE) vengono rinominati, cosi' non si mescolano. uscita .dwg o .dxf."""
+    from . import operazioni as op
+    res = op.unisci(file, uscita, modo, distanza)
+    _vista_in_fondo([(res["file"], _stem(res["file"]))], f"uniti {len(res['fogli'])} disegni")
+    return _j(res)
+
+
+@strumento
+def dwg_pulisci(dwg: str, doppioni: bool = True, lunghezza_zero: bool = True, inutilizzati: bool = True,
+                applica: bool = False, out_dwg: str = "", commessa: str = "") -> str:
+    """Pulizia di un DWG: entita' doppie sovrapposte (stessa geometria e layer, tipico dopo copie o
+    conversioni), linee e polilinee di lunghezza zero, testi vuoti; con inutilizzati anche blocchi, layer,
+    stili di testo e tipi di linea che nessuno usa (come ELIMINA/PURGE). applica=False = elenco di cosa
+    sparirebbe; applica=True scrive DWG nativo con backup."""
+    from . import operazioni as op
+    src = _file(commessa, dwg)
+    res = op.pulisci(src, doppioni, lunghezza_zero, inutilizzati, applica, out_dwg)
+    if res.get("applicato"):
+        _vista_in_fondo([(res["dwg"], _stem(src))], "disegno pulito")
+    return _j(res)
+
+
+@strumento
+def dwg_versione(dwg: str, versione: str = "2013", uscita: str = "", commessa: str = "") -> str:
+    """Salva un DWG in un'altra versione: 2000, 2004, 2007, 2010, 2013, 2018 (per chi ha un CAD piu'
+    vecchio), oppure "dxf". uscita vuota = accanto all'originale con _R<versione>. L'originale non cambia."""
+    from . import operazioni as op
+    return _j(op.converti_versione(_file(commessa, dwg), versione, uscita))
+
+
+@strumento
+def dwg_tabella(dwg: str, zona: str, xlsx: str = "", commessa: str = "") -> str:
+    """Legge una tabella disegnata con linee e testi (distinta, tabella dei pin, lista fogli, legenda) dentro
+    la zona 'x0,y0,x1,y1' mm: righe e colonne dalle linee orizzontali e verticali, celle unite comprese
+    (ogni riga ha le sue colonne). Con xlsx scrive anche l'Excel. Per la zona: dwg_anteprima o vista."""
+    from . import operazioni as op
+    return _j(op.leggi_tabella(_file(commessa, dwg), _zona(zona), xlsx))
+
+
+@strumento
+def scheda_cavo_crea(spec: str, uscita: str, tipo: str = "cavo", anteprima: bool = True):
+    """Disegna da zero un foglio A3 completo in DWG: tipo "cavo" (scheda di un cavo: connettore circolare
+    M8/M12/M23 o morsettiera ai due capi, fili colorati, guaina, schermo, sezione, tabella dei collegamenti,
+    distinta, quota, note, cartiglio), "sdoppiatore" (cavo a Y M12 -> 2x M8) o "ingressi" (schema di 8
+    sensori PNP su un modulo di ingresso). spec JSON; quello che manca non viene disegnato (connettori
+    predefiniti: M12 4 poli a sinistra, morsettiera a destra). Es.:
+    {"titolo":"CAVO SENSORE M12 - 4 POLI","codice":"CAV-M12-4P-2000","lunghezza":2000,
+     "sinistra":{"tipo":"circolare","sigla":"-XS1","descrizione":"M12 femmina 4 poli","poli":4},
+     "destra":{"tipo":"morsetti","sigla":"-X2"},"cavo":"Cavo PUR 4x0,34","sezione":"PUR 4x0,34",
+     "fili":[["1","BN","+24 V","1"],["2","WH","uscita 2","2"],["3","BU","0 V","3"],["4","BK","uscita 1","4"]],
+     "distinta":[["1","1","Connettore M12 femmina","M12-F4"]],"note":["Puntali isolati"],
+     "schermo":"Schermo a 360%%d con pressacavo EMC"}
+    fili = [da, colore, funzione, a]; colori BN WH BU BK GY GN YE PK RD VT OG GNYE. Per "ingressi":
+    "sensori":[["-B1","Pezzo|in posizione"],...]. Restituisce il DWG, l'anteprima e il controllo grafico."""
+    from . import operazioni as op
+    res = op.crea_scheda(_json_o_vuoto(spec) or {}, uscita, tipo, anteprima)
+    _vista_in_fondo([(res["file"], _stem(res["file"]))], "scheda creata")
+    if anteprima and res.get("anteprima"):
+        from PIL import Image as PILImage
+        return [_img(PILImage.open(res["anteprima"]), 1600), _j(res)]
+    return _j(res)
+
+
+@strumento
+def dwg_pdf_fogli(dwg: str, pdf: str = "", commessa: str = "") -> str:
+    """PDF vettoriale con una pagina per foglio: multifoglio SPAC o a layer numerati (gli altri fogli spenti,
+    la cornice comune resta) oppure fogli affiancati con la cornice (uno per cornice). Senza SPAC; i testi
+    SHX disegnati con i glifi Hershey. pdf vuoto = accanto al DWG con _fogli.pdf."""
+    from . import operazioni as op
+    return _j(op.pdf_fogli(_file(commessa, dwg), pdf))
+
+
 def _stem(p: str) -> str:
     return os.path.splitext(os.path.basename(p))[0]
 
